@@ -79,9 +79,29 @@ if ($id) {
         </div>
 
         <div class="form-actions">
-          <a href="<?= $type === 'job' ? 'jobs.php' : 'internships.php' ?>" class="btn btn-modify">Cancel</a>
-          <button type="submit" class="btn btn-create"><?= $id ? 'Save changes' : 'Create posting' ?></button>
-        </div>
+
+    <a href="<?= $type === 'job' ? 'jobs.php' : 'internships.php' ?>"
+       class="btn btn-modify">
+        Cancel
+    </a>
+
+    <button
+    type="submit"
+    name="status"
+    value="draft"
+    class="btn btn-modify">
+    Save Draft
+</button>
+
+<button
+    type="submit"
+    name="status"
+    value="submitted"
+    class="btn btn-create">
+    <?= $id ? 'Submit Changes' : 'Submit Posting' ?>
+</button>
+
+</div>
       </form>
     </main>
   </div>
