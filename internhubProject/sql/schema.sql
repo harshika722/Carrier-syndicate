@@ -8,10 +8,10 @@
 --   mysql -u root -p < schema.sql
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS internhub_new
+CREATE DATABASE IF NOT EXISTS internhub
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-USE internhub_new;
+USE internhub;
 
 -- ---------------------------------------------------
 -- Companies (registration + login)
