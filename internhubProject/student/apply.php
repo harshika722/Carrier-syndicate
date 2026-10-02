@@ -11,7 +11,10 @@ if ($postingId <= 0) {
     redirect('postings.php');
 }
 
-$stmt = $pdo->prepare("SELECT id, company_id, open_positions, applications_received FROM postings WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, company_id, open_positions, applications_received
+FROM postings
+WHERE id = ?
+  AND status = 'approved'");
 $stmt->execute([$postingId]);
 $posting = $stmt->fetch();
 

@@ -4,69 +4,18 @@ require_admin();
 
 $search = trim($_GET['q'] ?? '');
 $type = $_GET['type'] ?? '';
-$company = $_GET['company'] ?? '';
-$status = $_GET['status'] ?? '';
+if (!in_array($type, ['internship','job'], true)) $type = '';
 
-
-/* Validate status */
-$allowedStatuses = ['applied', 'on_hold', 'accepted', 'rejected'];
-
-if (!in_array($status, $allowedStatuses, true)) {
-    $status = '';
-}
-
-/* Get companies for dropdown */
-$companyStmt = $pdo->query(
-    "SELECT id, company_name
-     FROM companies
-     ORDER BY company_name ASC"
-);
-
-$companies = $companyStmt->fetchAll();
-
-/* Build postings query */
 $sql = "SELECT p.*, c.company_name
         FROM postings p
         JOIN companies c ON c.id = p.company_id
-        WHERE 1=1";
-
+        WHERE p.status = 'submitted'";
 $params = [];
-
-/* Type filter */
-if ($type !== '') {
-    $sql .= " AND p.type = ?";
-    $params[] = $type;
-}
-
-/* Company filter */
-if ($company !== '' && ctype_digit((string)$company)) {
-    $sql .= " AND p.company_id = ?";
-    $params[] = (int)$company;
-} else {
-    $company = '';
-}
-
-
-
-/* Search filter */
-if ($search !== '') {
-    $sql .= " AND (
-        p.title LIKE ?
-        OR c.company_name LIKE ?
-    )";
-
-    $searchValue = "%$search%";
-
-    $params[] = $searchValue;
-    $params[] = $searchValue;
-}
-
-/* Newest postings first */
+if ($type !== '') { $sql .= " AND p.type = ?"; $params[] = $type; }
+if ($search !== '') { $sql .= " AND (p.title LIKE ? OR c.company_name LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; }
 $sql .= " ORDER BY p.created_at DESC";
-
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
-
 $rows = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -88,123 +37,89 @@ $rows = $stmt->fetchAll();
       <div class="page-head"><h1>Postings</h1><p>Every internship and job across all companies.</p></div>
 
       <form class="filter-bar" method="get" action="">
-
-  <!-- Search -->
-  <input
-    type="text"
-    name="q"
-    placeholder="Search title or company..."
-    value="<?= h($search) ?>"
-  >
-
-  <!-- Type -->
-  <select name="type" onchange="this.form.submit()">
-    <option value="">All Types</option>
-
-    <option
-      value="internship"
-      <?= $type === 'internship' ? 'selected' : '' ?>
-    >
-      Internship
-    </option>
-
-    <option
-      value="job"
-      <?= $type === 'job' ? 'selected' : '' ?>
-    >
-      Job
-    </option>
-  </select>
-
-  <!-- Company -->
-  <select name="company" onchange="this.form.submit()">
-    <option value="">All Companies</option>
-
-    <?php foreach ($companies as $item): ?>
-      <option
-        value="<?= (int)$item['id'] ?>"
-        <?= $company == $item['id'] ? 'selected' : '' ?>
-      >
-        <?= h($item['company_name']) ?>
-      </option>
-    <?php endforeach; ?>
-
-  </select>
-<!-- Status -->
-<select name="status" onchange="this.form.submit()">
-    <option value="">All Statuses</option>
-
-    <option
-        value="applied"
-        <?= $status === 'applied' ? 'selected' : '' ?>
-    >
-        Applied
-    </option>
-
-    <option
-        value="on_hold"
-        <?= $status === 'on_hold' ? 'selected' : '' ?>
-    >
-        On Hold
-    </option>
-
-    <option
-        value="accepted"
-        <?= $status === 'accepted' ? 'selected' : '' ?>
-    >
-        Accepted
-    </option>
-
-    <option
-        value="rejected"
-        <?= $status === 'rejected' ? 'selected' : '' ?>
-    >
-        Rejected
-    </option>
-</select>
-  <!-- Search button -->
-  <button type="submit" class="btn btn-modify">
-     Filter
-  </button>
-
-  <!-- Clear -->
-  <?php if (
-    $search !== '' ||
-    $type !== '' ||
-    $company !== '' 
-): ?>
-
-    <a href="postings.php" class="btn btn-danger">
-      ✕ Clear
-    </a>
-
-  <?php endif; ?>
-
-</form>
+        <input type="text" name="q" placeholder="Search title or company…" value="<?= h($search) ?>">
+        <select name="type">
+          <option value="">All types</option>
+          <option value="internship" <?= $type === 'internship' ? 'selected' : '' ?>>Internships</option>
+          <option value="job" <?= $type === 'job' ? 'selected' : '' ?>>Jobs</option>
+        </select>
+        <button type="submit" class="btn btn-modify">🔍 Filter</button>
+        <?php if ($search !== '' || $type !== ''): ?><a href="postings.php" class="btn btn-danger">✕ Clear</a><?php endif; ?>
+      </form>
 
       <?php if (!$rows): ?>
         <div class="placeholder-box" style="min-height:160px;"><div class="ph-title">No postings found</div></div>
       <?php else: ?>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Title</th><th>Company</th><th>Type</th><th>Open</th><th>Applications</th><th></th></tr></thead>
+            <thead>
+<tr>
+    <th>Title</th>
+    <th>Company</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Open</th>
+    <th>Applications</th>
+    <th></th>
+</tr>
+</thead>
             <tbody>
               <?php foreach ($rows as $row): ?>
                 <tr>
                   <td class="row-title"><?= h($row['title']) ?></td>
                   <td><?= h($row['company_name']) ?></td>
                   <td><?= $row['type'] === 'internship' ? '🎓 Internship' : '💼 Job' ?></td>
-                  <td><?= (int)$row['open_positions'] ?></td>
+<td><?= h(ucfirst($row['status'])) ?></td>
+<td><?= (int)$row['open_positions'] ?></td>
                   <td><?= (int)$row['applications_received'] ?></td>
                   <td class="row-actions">
-                    <a class="btn btn-modify" href="posting-edit.php?id=<?= (int)$row['id'] ?>">✎ Edit</a>
-                    <form class="js-delete" action="delete.php" method="post">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="table" value="postings">
-                      <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                      <button type="submit" class="btn btn-danger">🗑 Delete</button>
-                    </form>
-                  </td>
+
+    <?php if ($row['status'] === 'submitted'): ?>
+
+        <form action="posting-review.php" method="post" style="display:inline;">
+            <?= csrf_field() ?>
+
+            <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+
+            <button type="submit"
+                    name="action"
+                    value="approve"
+                    class="btn btn-create">
+                ✓ Approve
+            </button>
+
+            <button type="submit"
+                    name="action"
+                    value="reject"
+                    class="btn btn-danger">
+                ✕ Reject
+            </button>
+        </form>
+
+    <?php endif; ?>
+
+    <a class="btn btn-modify"
+       href="posting-edit.php?id=<?= (int)$row['id'] ?>">
+        ✎ Edit
+    </a>
+
+    <form class="js-delete" action="delete.php" method="post">
+        <?= csrf_field() ?>
+
+        <input type="hidden"
+               name="table"
+               value="postings">
+
+        <input type="hidden"
+               name="id"
+               value="<?= (int)$row['id'] ?>">
+
+        <button type="submit" class="btn btn-danger">
+            🗑 Delete
+        </button>
+    </form>
+
+</td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
