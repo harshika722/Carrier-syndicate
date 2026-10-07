@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/functions.php';
 require_admin();
 
 $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
-$stmt = $pdo->prepare("SELECT p.*, c.company_name FROM postings p JOIN companies c ON c.id = p.company_id WHERE p.id = ?");
+$stmt = $pdo->prepare("SELECT p.*, c.company_name FROM postings p JOIN companies c ON c.id = p.company_id WHERE p.id = ? AND p.status <> 'draft'");
 $stmt->execute([$id]);
 $posting = $stmt->fetch();
 if (!$posting) { flash_error_set('Posting not found.'); redirect('postings.php'); }
