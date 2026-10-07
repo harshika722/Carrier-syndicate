@@ -8,7 +8,7 @@ $stmt = $pdo->prepare(
      FROM applications a
      JOIN postings p ON p.id = a.posting_id
      JOIN companies c ON c.id = p.company_id
-     WHERE a.student_id = ?
+    WHERE a.student_id = ? AND p.status = 'approved'
      ORDER BY a.applied_at DESC"
 );
 $stmt->execute([$sid]);
