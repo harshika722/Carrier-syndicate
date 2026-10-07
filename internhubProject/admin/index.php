@@ -3,9 +3,10 @@ require_once __DIR__ . '/includes/functions.php';
 require_admin();
 
 $counts = [];
-foreach (['companies','students','postings','sessions','slots','applications'] as $t) {
+foreach (['companies','students','sessions','slots','applications'] as $t) {
     $counts[$t] = (int) $pdo->query("SELECT COUNT(*) FROM $t")->fetchColumn();
 }
+$counts['postings'] = (int) $pdo->query("SELECT COUNT(*) FROM postings WHERE status <> 'draft'")->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="en">
