@@ -37,7 +37,10 @@ if ($id) {
     <main class="main">
       <div class="page-head">
         <h1><?= $id ? '✎ Edit' : '＋ Add' ?> <?= h($typeLabel) ?></h1>
-        <p><?= $id ? 'Update this posting — it saves straight to the database.' : 'This blank form creates a new posting in the database.' ?></p>
+        <p><?= $id ? 'Update this posting and save it as a draft or submit it for review.' : 'Save a draft now or submit the completed posting for admin review.' ?></p>
+        <?php if ($id): ?>
+          <p>Current state: <strong><?= h(ucfirst(str_replace('_', ' ', $posting['status'] ?? 'approved'))) ?></strong></p>
+        <?php endif; ?>
       </div>
 
       <form class="form-card" method="post" action="posting-save.php">
@@ -79,29 +82,10 @@ if ($id) {
         </div>
 
         <div class="form-actions">
-
-    <a href="<?= $type === 'job' ? 'jobs.php' : 'internships.php' ?>"
-       class="btn btn-modify">
-        Cancel
-    </a>
-
-    <button
-    type="submit"
-    name="status"
-    value="draft"
-    class="btn btn-modify">
-    Save Draft
-</button>
-
-<button
-    type="submit"
-    name="status"
-    value="submitted"
-    class="btn btn-create">
-    <?= $id ? 'Submit Changes' : 'Submit Posting' ?>
-</button>
-
-</div>
+          <a href="<?= $type === 'job' ? 'jobs.php' : 'internships.php' ?>" class="btn btn-modify">Cancel</a>
+          <button type="submit" name="action" value="save_draft" formnovalidate class="btn btn-modify">Save as Draft</button>
+          <button type="submit" name="action" value="submit_for_review" class="btn btn-create">Submit for Review</button>
+        </div>
       </form>
     </main>
   </div>
