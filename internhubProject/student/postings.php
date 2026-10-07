@@ -7,10 +7,7 @@ $type   = $_GET['type'] ?? '';
 $search = trim($_GET['q'] ?? '');
 if (!in_array($type, ['internship', 'job'], true)) $type = '';
 
-$sql = "SELECT p.*, c.company_name
-        FROM postings p
-        JOIN companies c ON c.id = p.company_id
-        WHERE p.status = 'approved'";
+$sql = "SELECT p.*, c.company_name FROM postings p JOIN companies c ON c.id = p.company_id WHERE p.status = 'approved'";
 $params = [];
 if ($type !== '') { $sql .= " AND p.type = ?"; $params[] = $type; }
 if ($search !== '') { $sql .= " AND (p.title LIKE ? OR c.company_name LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; }
