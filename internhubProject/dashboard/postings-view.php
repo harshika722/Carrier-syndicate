@@ -82,6 +82,7 @@ $rows = $stmt->fetchAll();
             <thead>
               <tr>
                 <th>Title</th>
+                <th>State</th>
                 <th>Open</th>
                 <th>Applications</th>
                 <th>Accepted</th>
@@ -98,6 +99,7 @@ $rows = $stmt->fetchAll();
                     <div class="row-title"><?= h($row['title']) ?></div>
                     <?php if ($row['description']): ?><div class="row-sub"><?= h(mb_strimwidth($row['description'], 0, 80, '…')) ?></div><?php endif; ?>
                   </td>
+                  <td><?= h(ucfirst(str_replace('_', ' ', $row['status'] ?? 'approved'))) ?></td>
                   <td><?= (int)$row['open_positions'] ?></td>
                   <td><?= (int)$row['applications_received'] ?></td>
                   <td><?= (int)$row['accepted'] ?></td>
