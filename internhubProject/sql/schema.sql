@@ -8,10 +8,10 @@
 --   mysql -u root -p < schema.sql
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS internhub
+CREATE DATABASE IF NOT EXISTS internhub_new
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-USE internhub;
+USE internhub_new;
 
 -- ---------------------------------------------------
 -- Companies (registration + login)
@@ -76,10 +76,12 @@ CREATE TABLE postings (
   accepted                INT NOT NULL DEFAULT 0,
   on_hold                 INT NOT NULL DEFAULT 0,
   rejected                INT NOT NULL DEFAULT 0,
+  status                  ENUM('draft','pending_review','approved') NOT NULL DEFAULT 'approved',
   created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at              DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_postings_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-  INDEX idx_postings_company_type (company_id, type)
+  INDEX idx_postings_company_type (company_id, type),
+  INDEX idx_postings_company_status (company_id, status)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------
