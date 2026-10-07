@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/functions.php';
 require_student_login();
 $sid = current_student_id();
 
-$countStmt = $pdo->prepare("SELECT status, COUNT(*) AS n FROM applications WHERE student_id = ? GROUP BY status");
+$countStmt = $pdo->prepare("SELECT a.status, COUNT(*) AS n FROM applications a JOIN postings p ON p.id = a.posting_id WHERE a.student_id = ? AND p.status = 'approved' GROUP BY a.status");
 $countStmt->execute([$sid]);
 $counts = ['applied' => 0, 'on_hold' => 0, 'accepted' => 0, 'rejected' => 0];
 foreach ($countStmt->fetchAll() as $row) { $counts[$row['status']] = (int)$row['n']; }
@@ -12,7 +12,7 @@ $totalApplications = array_sum($counts);
 $recentStmt = $pdo->prepare(
     "SELECT p.id, p.title, p.type, c.company_name
      FROM postings p JOIN companies c ON c.id = p.company_id
-     WHERE p.open_positions > 0
+    WHERE p.open_positions > 0 AND p.status = 'approved'
      ORDER BY p.created_at DESC LIMIT 5"
 );
 $recentStmt->execute();
