@@ -6,10 +6,7 @@ $search = trim($_GET['q'] ?? '');
 $type = $_GET['type'] ?? '';
 if (!in_array($type, ['internship','job'], true)) $type = '';
 
-$sql = "SELECT p.*, c.company_name
-        FROM postings p
-        JOIN companies c ON c.id = p.company_id
-        WHERE p.status = 'submitted'";
+$sql = "SELECT p.*, c.company_name FROM postings p JOIN companies c ON c.id = p.company_id WHERE p.status <> 'draft'";
 $params = [];
 if ($type !== '') { $sql .= " AND p.type = ?"; $params[] = $type; }
 if ($search !== '') { $sql .= " AND (p.title LIKE ? OR c.company_name LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; }
@@ -52,74 +49,32 @@ $rows = $stmt->fetchAll();
       <?php else: ?>
         <div class="table-wrap">
           <table class="data-table">
-            <thead>
-<tr>
-    <th>Title</th>
-    <th>Company</th>
-    <th>Type</th>
-    <th>Status</th>
-    <th>Open</th>
-    <th>Applications</th>
-    <th></th>
-</tr>
-</thead>
+            <thead><tr><th>Title</th><th>Company</th><th>Type</th><th>State</th><th>Open</th><th>Applications</th><th></th></tr></thead>
             <tbody>
               <?php foreach ($rows as $row): ?>
                 <tr>
                   <td class="row-title"><?= h($row['title']) ?></td>
                   <td><?= h($row['company_name']) ?></td>
                   <td><?= $row['type'] === 'internship' ? '🎓 Internship' : '💼 Job' ?></td>
-<td><?= h(ucfirst($row['status'])) ?></td>
-<td><?= (int)$row['open_positions'] ?></td>
+                  <td><?= h(ucfirst(str_replace('_', ' ', $row['status']))) ?></td>
+                  <td><?= (int)$row['open_positions'] ?></td>
                   <td><?= (int)$row['applications_received'] ?></td>
                   <td class="row-actions">
-
-    <?php if ($row['status'] === 'submitted'): ?>
-
-        <form action="posting-review.php" method="post" style="display:inline;">
-            <?= csrf_field() ?>
-
-            <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-
-            <button type="submit"
-                    name="action"
-                    value="approve"
-                    class="btn btn-create">
-                ✓ Approve
-            </button>
-
-            <button type="submit"
-                    name="action"
-                    value="reject"
-                    class="btn btn-danger">
-                ✕ Reject
-            </button>
-        </form>
-
-    <?php endif; ?>
-
-    <a class="btn btn-modify"
-       href="posting-edit.php?id=<?= (int)$row['id'] ?>">
-        ✎ Edit
-    </a>
-
-    <form class="js-delete" action="delete.php" method="post">
-        <?= csrf_field() ?>
-
-        <input type="hidden"
-               name="table"
-               value="postings">
-
-        <input type="hidden"
-               name="id"
-               value="<?= (int)$row['id'] ?>">
-
-        <button type="submit" class="btn btn-danger">
-            🗑 Delete
-        </button>
-    </form>
-
-</td>
+                    <?php if ($row['status'] === 'pending_review'): ?>
+                      <form action="posting-review.php" method="post">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                        <button type="submit" class="btn btn-create">Approve</button>
+                      </form>
+                    <?php endif; ?>
+                    <a class="btn btn-modify" href="posting-edit.php?id=<?= (int)$row['id'] ?>">✎ Edit</a>
+                    <form class="js-delete" action="delete.php" method="post">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="table" value="postings">
+                      <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                      <button type="submit" class="btn btn-danger">🗑 Delete</button>
+                    </form>
+                  </td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
